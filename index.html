@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=375">
+<title>账单确认 - 已支付</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    max-width: 375px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .header .back { position: absolute; left: 16px; font-size: 18px; color: #333; cursor: pointer; }
+  .header .title { font-size: 17px; font-weight: 600; }
+  .header .actions { position: absolute; right: 16px; display: flex; gap: 8px; }
+  .header .actions span { font-size: 14px; color: #999; }
+
+  /* Tabs */
+  .tabs {
+    background: #fff;
+    display: flex;
+    padding: 0 16px;
+    gap: 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .tab {
+    padding: 12px 0;
+    font-size: 15px;
+    color: #999;
+    position: relative;
+    cursor: pointer;
+  }
+  .tab.active {
+    color: #333;
+    font-weight: 600;
+  }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #1a2b5f;
+    border-radius: 2px;
+  }
+  .tab .badge {
+    background: #ee4d2d;
+    color: #fff;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    font-weight: 400;
+  }
+
+  /* Search */
+  .search-bar {
+    background: #fff;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .search-input {
+    width: 100%;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px 10px 36px;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+    position: relative;
+  }
+  .search-wrap {
+    position: relative;
+  }
+  .search-wrap::before {
+    content: '🔍';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    z-index: 1;
+  }
+  .search-input::placeholder { color: #bbb; }
+
+  /* List */
+  .list { padding: 0 12px; }
+
+  .order-card {
+    background: #fff;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .order-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .order-summary:active { background: #f9f9f9; }
+
+  .order-left { display: flex; flex-direction: column; gap: 4px; }
+  .order-no { font-size: 15px; font-weight: 500; color: #333; }
+  .order-source {
+    font-size: 13px;
+    color: #888;
+  }
+  .order-source .tag {
+    display: inline-block;
+    background: #f0f5ff;
+    color: #3370ff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  .order-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .order-amount {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+  .arrow {
+    font-size: 12px;
+    color: #ccc;
+    transition: transform 0.2s;
+  }
+  .order-card.expanded .arrow { transform: rotate(90deg); }
+
+  /* Detail */
+  .order-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  .order-card.expanded .order-detail {
+    max-height: 300px;
+  }
+
+  .detail-content {
+    padding: 0 16px 14px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .detail-row:not(:last-child) { border-bottom: 1px solid #f8f8f8; }
+  .detail-label { color: #999; }
+  .detail-value { color: #333; font-weight: 450; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #bbb;
+    font-size: 14px;
+    display: none;
+  }
+
+  /* Summary strip */
+  .summary-strip {
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #888;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .summary-strip .total-amount { color: #333; font-weight: 600; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="back">‹</span>
+  <span class="title">账单确认</span>
+  <div class="actions"><span>···</span></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab">待处理<span class="badge">52</span></div>
+  <div class="tab">已处理</div>
+  <div class="tab active">已支付</div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="搜索订单号或业务方" id="searchInput">
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-strip">
+  <span id="countText">共 5 笔</span>
+  <span>合计 <span class="total-amount" id="totalAmount">¥128,350.00</span></span>
+</div>
+
+<!-- List -->
+<div class="list" id="orderList">
+</div>
+
+<div class="empty" id="emptyState">
+  <div style="font-size:40px; margin-bottom:12px;">📋</div>
+  暂无已支付订单
+</div>
+
+<script>
+const orders = [
+  {
+    id: 'DD202603310001',
+    source: '订货',
+    amount: 45200.00,
+    payee: '供应商A公司',
+    orderTime: '2026-03-28 09:15',
+    payTime: '2026-03-30 14:22',
+  },
+  {
+    id: 'DD202603310002',
+    source: '后台导入',
+    amount: 18750.50,
+    payee: '物流服务商B',
+    orderTime: '2026-03-27 11:30',
+    payTime: '2026-03-30 10:05',
+  },
+  {
+    id: 'DD202603280015',
+    source: '订货',
+    amount: 32400.00,
+    payee: '原材料供应商C',
+    orderTime: '2026-03-26 16:45',
+    payTime: '2026-03-29 09:30',
+  },
+  {
+    id: 'DD202603270008',
+    source: '后台导入',
+    amount: 8600.00,
+    payee: '配件厂商D',
+    orderTime: '2026-03-25 08:20',
+    payTime: '2026-03-28 15:10',
+  },
+  {
+    id: 'DD202603250003',
+    source: '订货',
+    amount: 23399.50,
+    payee: '包装材料E公司',
+    orderTime: '2026-03-24 14:00',
+    payTime: '2026-03-27 11:45',
+  }
+];
+
+function formatAmount(n) {
+  return '¥' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function renderList(filter = '') {
+  const list = document.getElementById('orderList');
+  const empty = document.getElementById('emptyState');
+  const q = filter.toLowerCase();
+  const filtered = orders.filter(o =>
+    o.id.toLowerCase().includes(q) || o.source.includes(filter)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('countText').textContent = '共 0 笔';
+    document.getElementById('totalAmount').textContent = '¥0.00';
+    return;
+  }
+
+  empty.style.display = 'none';
+  const total = filtered.reduce((s, o) => s + o.amount, 0);
+  document.getElementById('countText').textContent = `共 ${filtered.length} 笔`;
+  document.getElementById('totalAmount').textContent = formatAmount(total);
+
+  list.innerHTML = filtered.map(o => `
+    <div class="order-card" onclick="this.classList.toggle('expanded')">
+      <div class="order-summary">
+        <div class="order-left">
+          <div class="order-no">${o.id}</div>
+          <div class="order-source">${o.source}<span class="tag">${o.source === '订货' ? '订货' : '导入'}</span></div>
+        </div>
+        <div class="order-right">
+          <span class="order-amount">${formatAmount(o.amount)}</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+      <div class="order-detail">
+        <div class="detail-content">
+          <div class="detail-row"><span class="detail-label">业务方</span><span class="detail-value">${o.source}</span></div>
+          <div class="detail-row"><span class="detail-label">收款方</span><span class="detail-value">${o.payee}</span></div>
+          <div class="detail-row"><span class="detail-label">下单时间</span><span class="detail-value">${o.orderTime}</span></div>
+          <div class="detail-row"><span class="detail-label">支付时间</span><span class="detail-value">${o.payTime}</span></div>
+          <div class="detail-row"><span class="detail-label">支付金额</span><span class="detail-value">${formatAmount(o.amount)}</span></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  renderList(e.target.value.trim());
+});
+
+renderList();
+</script>
+</body>
+</html>
