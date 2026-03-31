@@ -180,6 +180,26 @@
   }
   .search-clear.show { display: flex; }
 
+  .source-select {
+    width: 100%;
+    height: 36px;
+    background: var(--bg-page);
+    border: none;
+    border-radius: var(--radius-search);
+    padding: 0 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .source-select:focus { background-color: #eef0f4; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
   /* ===== SUMMARY ===== */
   .summary {
     display: flex;
@@ -356,8 +376,15 @@
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
-    <input class="search-input" type="text" placeholder="搜索订单号或业务方" id="searchInput" autocomplete="off">
+    <input class="search-input" type="text" placeholder="搜索订单号" id="searchInput" autocomplete="off">
     <div class="search-clear" id="searchClear" onclick="clearSearch()">✕</div>
+  </div>
+  <div class="search-wrap" style="margin-top:8px;">
+    <select class="source-select" id="sourceSelect" onchange="applyFilter()">
+      <option value="">全部业务方</option>
+      <option value="订货">订货</option>
+      <option value="后台导入">后台导入</option>
+    </select>
   </div>
 </div>
 
@@ -383,7 +410,7 @@ const orders = [
     id: 'DD202603310001',
     source: '订货',
     amount: 45200.00,
-    payee: '供应商A公司',
+    payee: 'XXX公司',
     orderTime: '2026-03-28 09:15',
     payTime: '2026-03-31 14:22',
   },
@@ -391,7 +418,7 @@ const orders = [
     id: 'DD202603310002',
     source: '后台导入',
     amount: 18750.50,
-    payee: '物流服务商B',
+    payee: 'XXX公司',
     orderTime: '2026-03-27 11:30',
     payTime: '2026-03-31 10:05',
   },
@@ -399,7 +426,7 @@ const orders = [
     id: 'DD202603280015',
     source: '订货',
     amount: 32400.00,
-    payee: '原材料供应商C',
+    payee: 'XXX公司',
     orderTime: '2026-03-26 16:45',
     payTime: '2026-03-30 09:30',
   },
@@ -407,7 +434,7 @@ const orders = [
     id: 'DD202603270008',
     source: '后台导入',
     amount: 8600.00,
-    payee: '配件厂商D',
+    payee: 'XXX公司',
     orderTime: '2026-03-25 08:20',
     payTime: '2026-03-29 15:10',
   },
@@ -415,7 +442,7 @@ const orders = [
     id: 'DD202603250003',
     source: '订货',
     amount: 23399.50,
-    payee: '包装材料E公司',
+    payee: 'XXX公司',
     orderTime: '2026-03-24 14:00',
     payTime: '2026-03-28 11:45',
   }
@@ -437,16 +464,22 @@ function toggleCard(el) {
   el.closest('.order-card').classList.toggle('expanded');
 }
 
-function renderList(filter = '') {
+function applyFilter() {
+  const keyword = document.getElementById('searchInput').value;
+  const source = document.getElementById('sourceSelect').value;
+  renderList(keyword, source);
+}
+
+function renderList(keyword = '', sourceFilter = '') {
   const list = document.getElementById('orderList');
   const empty = document.getElementById('emptyState');
-  const q = filter.toLowerCase().trim();
+  const q = keyword.toLowerCase().trim();
 
-  const filtered = orders.filter(o =>
-    o.id.toLowerCase().includes(q) ||
-    o.source.includes(filter.trim()) ||
-    (filter.trim() === '导入' && o.source === '后台导入')
-  );
+  const filtered = orders.filter(o => {
+    const matchKeyword = !q || o.id.toLowerCase().includes(q);
+    const matchSource = !sourceFilter || o.source === sourceFilter;
+    return matchKeyword && matchSource;
+  });
 
   if (filtered.length === 0) {
     list.innerHTML = '';
@@ -513,13 +546,13 @@ const searchClear = document.getElementById('searchClear');
 searchInput.addEventListener('input', e => {
   const val = e.target.value;
   searchClear.classList.toggle('show', val.length > 0);
-  renderList(val);
+  applyFilter();
 });
 
 function clearSearch() {
   searchInput.value = '';
   searchClear.classList.remove('show');
-  renderList();
+  applyFilter();
   searchInput.focus();
 }
 
@@ -530,7 +563,7 @@ function switchTab(el) {
 }
 
 // Init
-renderList();
+applyFilter();
 </script>
 </body>
 </html>
