@@ -2,244 +2,382 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=375">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>账单确认 - 已支付</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #1a2b5f;
+    --primary-light: #f0f3ff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+    --text-tertiary: #999;
+    --text-placeholder: #bfbfbf;
+    --bg-page: #f4f5f7;
+    --bg-card: #fff;
+    --border: #f0f0f0;
+    --tag-订货-bg: #e8f5e9;
+    --tag-订货-text: #2e7d32;
+    --tag-导入-bg: #fff3e0;
+    --tag-导入-text: #e65100;
+    --radius-card: 12px;
+    --radius-tag: 4px;
+    --radius-search: 8px;
+    --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
+    --transition: 0.25s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
-    background: #f5f5f5;
-    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
     max-width: 375px;
     margin: 0 auto;
     min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Header */
+  /* ===== HEADER ===== */
   .header {
-    background: #fff;
-    padding: 12px 16px;
+    background: var(--bg-card);
+    padding: 0 16px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .header .back { position: absolute; left: 16px; font-size: 18px; color: #333; cursor: pointer; }
-  .header .title { font-size: 17px; font-weight: 600; }
-  .header .actions { position: absolute; right: 16px; display: flex; gap: 8px; }
-  .header .actions span { font-size: 14px; color: #999; }
-
-  /* Tabs */
-  .tabs {
-    background: #fff;
+  .header-back {
+    position: absolute;
+    left: 12px;
+    width: 32px;
+    height: 32px;
     display: flex;
-    padding: 0 16px;
-    gap: 24px;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  .tab {
-    padding: 12px 0;
-    font-size: 15px;
-    color: #999;
-    position: relative;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
   }
-  .tab.active {
-    color: #333;
-    font-weight: 600;
+  .header-back svg { width: 20px; height: 20px; color: var(--text-primary); }
+  .header-title { font-size: 17px; font-weight: 600; letter-spacing: 0.3px; }
+  .header-actions {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    gap: 4px;
   }
+  .header-dot {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text-tertiary);
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    background: var(--bg-card);
+    display: flex;
+    padding: 0 20px;
+    gap: 28px;
+    position: sticky;
+    top: 44px;
+    z-index: 99;
+  }
+  .tab {
+    position: relative;
+    padding: 12px 0;
+    font-size: 15px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--transition);
+    user-select: none;
+  }
+  .tab.active { color: var(--text-primary); font-weight: 600; }
   .tab.active::after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
-    right: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
     height: 3px;
-    background: #1a2b5f;
+    background: var(--primary);
     border-radius: 2px;
   }
   .tab .badge {
+    display: inline-block;
     background: #ee4d2d;
     color: #fff;
-    font-size: 11px;
-    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 500;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    padding: 0 5px;
     border-radius: 8px;
-    margin-left: 4px;
-    font-weight: 400;
+    margin-left: 2px;
+    vertical-align: top;
+    position: relative;
+    top: -2px;
   }
 
-  /* Search */
-  .search-bar {
-    background: #fff;
-    padding: 12px 16px;
-    margin-bottom: 8px;
-  }
-  .search-input {
-    width: 100%;
-    background: #f5f5f5;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 12px 10px 36px;
-    font-size: 14px;
-    color: #333;
-    outline: none;
-    position: relative;
+  /* ===== SEARCH ===== */
+  .search-section {
+    background: var(--bg-card);
+    padding: 8px 16px 12px;
+    border-bottom: 1px solid var(--border);
   }
   .search-wrap {
     position: relative;
+    display: flex;
+    align-items: center;
   }
-  .search-wrap::before {
-    content: '🔍';
+  .search-icon {
     position: absolute;
     left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    z-index: 1;
+    width: 16px;
+    height: 16px;
+    color: var(--text-placeholder);
+    pointer-events: none;
   }
-  .search-input::placeholder { color: #bbb; }
+  .search-input {
+    width: 100%;
+    height: 36px;
+    background: var(--bg-page);
+    border: none;
+    border-radius: var(--radius-search);
+    padding: 0 36px 0 36px;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: background 0.2s;
+  }
+  .search-input::placeholder { color: var(--text-placeholder); }
+  .search-input:focus { background: #eef0f4; }
+  .search-clear {
+    position: absolute;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    background: var(--text-placeholder);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+  }
+  .search-clear.show { display: flex; }
 
-  /* List */
-  .list { padding: 0 12px; }
+  /* ===== SUMMARY ===== */
+  .summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px 8px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+  .summary-total {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  /* ===== ORDER LIST ===== */
+  .order-list { padding: 0 12px 20px; }
 
   .order-card {
-    background: #fff;
-    border-radius: 10px;
+    background: var(--bg-card);
+    border-radius: var(--radius-card);
     margin-bottom: 8px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s;
   }
 
-  .order-summary {
+  .order-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 14px 16px;
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
   }
-  .order-summary:active { background: #f9f9f9; }
+  .order-header:active { background: #fafafa; }
 
-  .order-left { display: flex; flex-direction: column; gap: 4px; }
-  .order-no { font-size: 15px; font-weight: 500; color: #333; }
-  .order-source {
-    font-size: 13px;
-    color: #888;
+  .order-info { flex: 1; min-width: 0; }
+  .order-no {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.2px;
   }
-  .order-source .tag {
+  .order-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .order-tag {
     display: inline-block;
-    background: #f0f5ff;
-    color: #3370ff;
     font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 4px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: var(--radius-tag);
+    letter-spacing: 0.3px;
   }
+  .order-tag.订货 { background: var(--tag-订货-bg); color: var(--tag-订货-text); }
+  .order-tag.导入 { background: var(--tag-导入-bg); color: var(--tag-导入-text); }
 
   .order-right {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
   }
   .order-amount {
     font-size: 15px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
   }
-  .arrow {
-    font-size: 12px;
+  .order-arrow {
+    width: 16px;
+    height: 16px;
     color: #ccc;
-    transition: transform 0.2s;
+    transition: transform var(--transition);
+    flex-shrink: 0;
   }
-  .order-card.expanded .arrow { transform: rotate(90deg); }
+  .order-card.expanded .order-arrow { transform: rotate(90deg); }
 
-  /* Detail */
+  /* ===== DETAIL ===== */
   .order-detail {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.25s ease;
+    transition: max-height var(--transition);
   }
-  .order-card.expanded .order-detail {
-    max-height: 300px;
-  }
+  .order-card.expanded .order-detail { max-height: 280px; }
 
-  .detail-content {
+  .detail-body {
     padding: 0 16px 14px;
-    border-top: 1px solid #f0f0f0;
+  }
+  .detail-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 12px;
   }
   .detail-row {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    font-size: 13px;
+    align-items: flex-start;
+    padding: 6px 0;
   }
-  .detail-row:not(:last-child) { border-bottom: 1px solid #f8f8f8; }
-  .detail-label { color: #999; }
-  .detail-value { color: #333; font-weight: 450; }
+  .detail-label {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+  .detail-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 450;
+    text-align: right;
+    margin-left: 16px;
+  }
 
-  /* Empty state */
-  .empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: #bbb;
-    font-size: 14px;
+  /* ===== EMPTY ===== */
+  .empty-state {
     display: none;
-  }
-
-  /* Summary strip */
-  .summary-strip {
-    background: #fff;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    font-size: 13px;
-    color: #888;
-    border-bottom: 1px solid #f0f0f0;
+    justify-content: center;
+    padding: 80px 40px;
+    color: var(--text-placeholder);
   }
-  .summary-strip .total-amount { color: #333; font-weight: 600; font-size: 15px; }
+  .empty-state.show { display: flex; }
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+  .empty-text { font-size: 14px; color: var(--text-tertiary); }
+
+  /* ===== LOADING SKELETON ===== */
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <div class="header">
-  <span class="back">‹</span>
-  <span class="title">账单确认</span>
-  <div class="actions"><span>···</span></div>
+  <div class="header-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  </div>
+  <span class="header-title">账单确认</span>
+  <div class="header-actions">
+    <span class="header-dot">···</span>
+  </div>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab">待处理<span class="badge">52</span></div>
-  <div class="tab">已处理</div>
-  <div class="tab active">已支付</div>
+  <div class="tab" onclick="switchTab(this)">待处理<span class="badge">52</span></div>
+  <div class="tab" onclick="switchTab(this)">已处理</div>
+  <div class="tab active" onclick="switchTab(this)">已支付</div>
 </div>
 
 <!-- Search -->
-<div class="search-bar">
+<div class="search-section">
   <div class="search-wrap">
-    <input class="search-input" type="text" placeholder="搜索订单号或业务方" id="searchInput">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input class="search-input" type="text" placeholder="搜索订单号或业务方" id="searchInput" autocomplete="off">
+    <div class="search-clear" id="searchClear" onclick="clearSearch()">✕</div>
   </div>
 </div>
 
 <!-- Summary -->
-<div class="summary-strip">
-  <span id="countText">共 5 笔</span>
-  <span>合计 <span class="total-amount" id="totalAmount">¥128,350.00</span></span>
+<div class="summary">
+  <span id="countText">共 0 笔</span>
+  <span>合计 <span class="summary-total" id="totalAmount">¥0.00</span></span>
 </div>
 
-<!-- List -->
-<div class="list" id="orderList">
-</div>
+<!-- Order List -->
+<div class="order-list" id="orderList"></div>
 
-<div class="empty" id="emptyState">
-  <div style="font-size:40px; margin-bottom:12px;">📋</div>
-  暂无已支付订单
+<!-- Empty State -->
+<div class="empty-state" id="emptyState">
+  <div class="empty-icon">📋</div>
+  <div class="empty-text">暂无已支付订单</div>
 </div>
 
 <script>
+// Demo data
 const orders = [
   {
     id: 'DD202603310001',
@@ -247,7 +385,7 @@ const orders = [
     amount: 45200.00,
     payee: '供应商A公司',
     orderTime: '2026-03-28 09:15',
-    payTime: '2026-03-30 14:22',
+    payTime: '2026-03-31 14:22',
   },
   {
     id: 'DD202603310002',
@@ -255,7 +393,7 @@ const orders = [
     amount: 18750.50,
     payee: '物流服务商B',
     orderTime: '2026-03-27 11:30',
-    payTime: '2026-03-30 10:05',
+    payTime: '2026-03-31 10:05',
   },
   {
     id: 'DD202603280015',
@@ -263,7 +401,7 @@ const orders = [
     amount: 32400.00,
     payee: '原材料供应商C',
     orderTime: '2026-03-26 16:45',
-    payTime: '2026-03-29 09:30',
+    payTime: '2026-03-30 09:30',
   },
   {
     id: 'DD202603270008',
@@ -271,7 +409,7 @@ const orders = [
     amount: 8600.00,
     payee: '配件厂商D',
     orderTime: '2026-03-25 08:20',
-    payTime: '2026-03-28 15:10',
+    payTime: '2026-03-29 15:10',
   },
   {
     id: 'DD202603250003',
@@ -279,7 +417,7 @@ const orders = [
     amount: 23399.50,
     payee: '包装材料E公司',
     orderTime: '2026-03-24 14:00',
-    payTime: '2026-03-27 11:45',
+    payTime: '2026-03-28 11:45',
   }
 ];
 
@@ -287,56 +425,111 @@ function formatAmount(n) {
   return '¥' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+function getTagClass(source) {
+  return source === '订货' ? '订货' : '导入';
+}
+
+function getTagText(source) {
+  return source === '订货' ? '订货' : '后台导入';
+}
+
+function toggleCard(el) {
+  el.closest('.order-card').classList.toggle('expanded');
+}
+
 function renderList(filter = '') {
   const list = document.getElementById('orderList');
   const empty = document.getElementById('emptyState');
-  const q = filter.toLowerCase();
+  const q = filter.toLowerCase().trim();
+
   const filtered = orders.filter(o =>
-    o.id.toLowerCase().includes(q) || o.source.includes(filter)
+    o.id.toLowerCase().includes(q) ||
+    o.source.includes(filter.trim()) ||
+    (filter.trim() === '导入' && o.source === '后台导入')
   );
 
   if (filtered.length === 0) {
     list.innerHTML = '';
-    empty.style.display = 'block';
+    empty.classList.add('show');
     document.getElementById('countText').textContent = '共 0 笔';
     document.getElementById('totalAmount').textContent = '¥0.00';
     return;
   }
 
-  empty.style.display = 'none';
+  empty.classList.remove('show');
   const total = filtered.reduce((s, o) => s + o.amount, 0);
   document.getElementById('countText').textContent = `共 ${filtered.length} 笔`;
   document.getElementById('totalAmount').textContent = formatAmount(total);
 
   list.innerHTML = filtered.map(o => `
-    <div class="order-card" onclick="this.classList.toggle('expanded')">
-      <div class="order-summary">
-        <div class="order-left">
+    <div class="order-card">
+      <div class="order-header" onclick="toggleCard(this)">
+        <div class="order-info">
           <div class="order-no">${o.id}</div>
-          <div class="order-source">${o.source}<span class="tag">${o.source === '订货' ? '订货' : '导入'}</span></div>
+          <div class="order-meta">
+            <span class="order-tag ${getTagClass(o.source)}">${getTagText(o.source)}</span>
+          </div>
         </div>
         <div class="order-right">
           <span class="order-amount">${formatAmount(o.amount)}</span>
-          <span class="arrow">›</span>
+          <svg class="order-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
         </div>
       </div>
       <div class="order-detail">
-        <div class="detail-content">
-          <div class="detail-row"><span class="detail-label">业务方</span><span class="detail-value">${o.source}</span></div>
-          <div class="detail-row"><span class="detail-label">收款方</span><span class="detail-value">${o.payee}</span></div>
-          <div class="detail-row"><span class="detail-label">下单时间</span><span class="detail-value">${o.orderTime}</span></div>
-          <div class="detail-row"><span class="detail-label">支付时间</span><span class="detail-value">${o.payTime}</span></div>
-          <div class="detail-row"><span class="detail-label">支付金额</span><span class="detail-value">${formatAmount(o.amount)}</span></div>
+        <div class="detail-body">
+          <div class="detail-divider"></div>
+          <div class="detail-row">
+            <span class="detail-label">业务方</span>
+            <span class="detail-value">${o.source}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">收款方</span>
+            <span class="detail-value">${o.payee}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">下单时间</span>
+            <span class="detail-value">${o.orderTime}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">支付时间</span>
+            <span class="detail-value">${o.payTime}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">支付金额</span>
+            <span class="detail-value">${formatAmount(o.amount)}</span>
+          </div>
         </div>
       </div>
     </div>
   `).join('');
 }
 
-document.getElementById('searchInput').addEventListener('input', e => {
-  renderList(e.target.value.trim());
+// Search
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', e => {
+  const val = e.target.value;
+  searchClear.classList.toggle('show', val.length > 0);
+  renderList(val);
 });
 
+function clearSearch() {
+  searchInput.value = '';
+  searchClear.classList.remove('show');
+  renderList();
+  searchInput.focus();
+}
+
+// Tab switching
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Init
 renderList();
 </script>
 </body>
