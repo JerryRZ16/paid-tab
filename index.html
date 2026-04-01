@@ -1,569 +1,291 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>账单确认 - 已支付</title>
-<style>
-  :root {
-    --primary: #1a2b5f;
-    --primary-light: #f0f3ff;
-    --text-primary: #1a1a1a;
-    --text-secondary: #666;
-    --text-tertiary: #999;
-    --text-placeholder: #bfbfbf;
-    --bg-page: #f4f5f7;
-    --bg-card: #fff;
-    --border: #f0f0f0;
-    --tag-订货-bg: #e8f5e9;
-    --tag-订货-text: #2e7d32;
-    --tag-导入-bg: #fff3e0;
-    --tag-导入-text: #e65100;
-    --radius-card: 12px;
-    --radius-tag: 4px;
-    --radius-search: 8px;
-    --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
-    --transition: 0.25s ease;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    background: var(--bg-page);
-    color: var(--text-primary);
-    max-width: 375px;
-    margin: 0 auto;
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ===== HEADER ===== */
-  .header {
-    background: var(--bg-card);
-    padding: 0 16px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-back {
-    position: absolute;
-    left: 12px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .header-back svg { width: 20px; height: 20px; color: var(--text-primary); }
-  .header-title { font-size: 17px; font-weight: 600; letter-spacing: 0.3px; }
-  .header-actions {
-    position: absolute;
-    right: 12px;
-    display: flex;
-    gap: 4px;
-  }
-  .header-dot {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: var(--text-tertiary);
-  }
-
-  /* ===== TABS ===== */
-  .tabs {
-    background: var(--bg-card);
-    display: flex;
-    padding: 0 20px;
-    gap: 28px;
-    position: sticky;
-    top: 44px;
-    z-index: 99;
-  }
-  .tab {
-    position: relative;
-    padding: 12px 0;
-    font-size: 15px;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: color var(--transition);
-    user-select: none;
-  }
-  .tab.active { color: var(--text-primary); font-weight: 600; }
-  .tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
-    height: 3px;
-    background: var(--primary);
-    border-radius: 2px;
-  }
-  .tab .badge {
-    display: inline-block;
-    background: #ee4d2d;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 500;
-    min-width: 16px;
-    height: 16px;
-    line-height: 16px;
-    text-align: center;
-    padding: 0 5px;
-    border-radius: 8px;
-    margin-left: 2px;
-    vertical-align: top;
-    position: relative;
-    top: -2px;
-  }
-
-  /* ===== SEARCH ===== */
-  .search-section {
-    background: var(--bg-card);
-    padding: 8px 16px 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .search-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    width: 16px;
-    height: 16px;
-    color: var(--text-placeholder);
-    pointer-events: none;
-  }
-  .search-input {
-    width: 100%;
-    height: 36px;
-    background: var(--bg-page);
-    border: none;
-    border-radius: var(--radius-search);
-    padding: 0 36px 0 36px;
-    font-size: 14px;
-    color: var(--text-primary);
-    outline: none;
-    transition: background 0.2s;
-  }
-  .search-input::placeholder { color: var(--text-placeholder); }
-  .search-input:focus { background: #eef0f4; }
-  .search-clear {
-    position: absolute;
-    right: 10px;
-    width: 18px;
-    height: 18px;
-    background: var(--text-placeholder);
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #fff;
-    font-size: 11px;
-    line-height: 1;
-  }
-  .search-clear.show { display: flex; }
-
-  .source-select {
-    width: 100%;
-    height: 36px;
-    background: var(--bg-page);
-    border: none;
-    border-radius: var(--radius-search);
-    padding: 0 12px;
-    font-size: 14px;
-    color: var(--text-primary);
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .source-select:focus { background-color: #eef0f4; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-
-  /* ===== SUMMARY ===== */
-  .summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px 8px;
-    font-size: 13px;
-    color: var(--text-tertiary);
-  }
-  .summary-total {
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  /* ===== ORDER LIST ===== */
-  .order-list { padding: 0 12px 20px; }
-
-  .order-card {
-    background: var(--bg-card);
-    border-radius: var(--radius-card);
-    margin-bottom: 8px;
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    transition: box-shadow 0.2s;
-  }
-
-  .order-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    cursor: pointer;
-  }
-  .order-header:active { background: #fafafa; }
-
-  .order-info { flex: 1; min-width: 0; }
-  .order-no {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-primary);
-    letter-spacing: 0.2px;
-  }
-  .order-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-  }
-  .order-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 1px 6px;
-    border-radius: var(--radius-tag);
-    letter-spacing: 0.3px;
-  }
-  .order-tag.订货 { background: var(--tag-订货-bg); color: var(--tag-订货-text); }
-  .order-tag.导入 { background: var(--tag-导入-bg); color: var(--tag-导入-text); }
-
-  .order-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    margin-left: 12px;
-  }
-  .order-amount {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-  .order-arrow {
-    width: 16px;
-    height: 16px;
-    color: #ccc;
-    transition: transform var(--transition);
-    flex-shrink: 0;
-  }
-  .order-card.expanded .order-arrow { transform: rotate(90deg); }
-
-  /* ===== DETAIL ===== */
-  .order-detail {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height var(--transition);
-  }
-  .order-card.expanded .order-detail { max-height: 280px; }
-
-  .detail-body {
-    padding: 0 16px 14px;
-  }
-  .detail-divider {
-    height: 1px;
-    background: var(--border);
-    margin-bottom: 12px;
-  }
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 6px 0;
-  }
-  .detail-label {
-    font-size: 13px;
-    color: var(--text-tertiary);
-    flex-shrink: 0;
-  }
-  .detail-value {
-    font-size: 13px;
-    color: var(--text-primary);
-    font-weight: 450;
-    text-align: right;
-    margin-left: 16px;
-  }
-
-  /* ===== EMPTY ===== */
-  .empty-state {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 40px;
-    color: var(--text-placeholder);
-  }
-  .empty-state.show { display: flex; }
-  .empty-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    margin-bottom: 16px;
-  }
-  .empty-text { font-size: 14px; color: var(--text-tertiary); }
-
-  /* ===== LOADING SKELETON ===== */
-  @keyframes shimmer {
-    0% { background-position: -200px 0; }
-    100% { background-position: 200px 0; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钱包 - 已支付订单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        'gray-50': '#F2F3F5',
+                        'gray-100': '#E5E6EB',
+                        'gray-200': '#C9CDD4',
+                        'gray-300': '#86909C',
+                        'gray-400': '#4E5969',
+                        'gray-500': '#1D2129',
+                    },
+                    fontFamily: {
+                        sans: ['PingFang SC', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .tab-active {
+                @apply text-primary border-b-2 border-primary font-medium;
+            }
+            .card-shadow {
+                box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+            }
+        }
+    </style>
 </head>
-<body>
-
-<!-- Header -->
-<div class="header">
-  <div class="header-back">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-  </div>
-  <span class="header-title">账单确认</span>
-  <div class="header-actions">
-    <span class="header-dot">···</span>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="tabs">
-  <div class="tab" onclick="switchTab(this)">待处理<span class="badge">52</span></div>
-  <div class="tab" onclick="switchTab(this)">已处理</div>
-  <div class="tab active" onclick="switchTab(this)">已支付</div>
-</div>
-
-<!-- Search -->
-<div class="search-section">
-  <div class="search-wrap">
-    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"></circle>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-    </svg>
-    <input class="search-input" type="text" placeholder="搜索订单号" id="searchInput" autocomplete="off">
-    <div class="search-clear" id="searchClear" onclick="clearSearch()">✕</div>
-  </div>
-  <div class="search-wrap" style="margin-top:8px;">
-    <select class="source-select" id="sourceSelect" onchange="applyFilter()">
-      <option value="">全部业务方</option>
-      <option value="订货">订货</option>
-      <option value="后台导入">后台导入</option>
-    </select>
-  </div>
-</div>
-
-<!-- Summary -->
-<div class="summary">
-  <span id="countText">共 0 笔</span>
-  <span>合计 <span class="summary-total" id="totalAmount">¥0.00</span></span>
-</div>
-
-<!-- Order List -->
-<div class="order-list" id="orderList"></div>
-
-<!-- Empty State -->
-<div class="empty-state" id="emptyState">
-  <div class="empty-icon">📋</div>
-  <div class="empty-text">暂无已支付订单</div>
-</div>
-
-<script>
-// Demo data
-const orders = [
-  {
-    id: 'DD202603310001',
-    source: '订货',
-    amount: 45200.00,
-    payee: 'XXX公司',
-    orderTime: '2026-03-28 09:15',
-    payTime: '2026-03-31 14:22',
-  },
-  {
-    id: 'DD202603310002',
-    source: '后台导入',
-    amount: 18750.50,
-    payee: 'XXX公司',
-    orderTime: '2026-03-27 11:30',
-    payTime: '2026-03-31 10:05',
-  },
-  {
-    id: 'DD202603280015',
-    source: '订货',
-    amount: 32400.00,
-    payee: 'XXX公司',
-    orderTime: '2026-03-26 16:45',
-    payTime: '2026-03-30 09:30',
-  },
-  {
-    id: 'DD202603270008',
-    source: '后台导入',
-    amount: 8600.00,
-    payee: 'XXX公司',
-    orderTime: '2026-03-25 08:20',
-    payTime: '2026-03-29 15:10',
-  },
-  {
-    id: 'DD202603250003',
-    source: '订货',
-    amount: 23399.50,
-    payee: 'XXX公司',
-    orderTime: '2026-03-24 14:00',
-    payTime: '2026-03-28 11:45',
-  }
-];
-
-function formatAmount(n) {
-  return '¥' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function getTagClass(source) {
-  return source === '订货' ? '订货' : '导入';
-}
-
-function getTagText(source) {
-  return source === '订货' ? '订货' : '后台导入';
-}
-
-function toggleCard(el) {
-  el.closest('.order-card').classList.toggle('expanded');
-}
-
-function applyFilter() {
-  const keyword = document.getElementById('searchInput').value;
-  const source = document.getElementById('sourceSelect').value;
-  renderList(keyword, source);
-}
-
-function renderList(keyword = '', sourceFilter = '') {
-  const list = document.getElementById('orderList');
-  const empty = document.getElementById('emptyState');
-  const q = keyword.toLowerCase().trim();
-
-  const filtered = orders.filter(o => {
-    const matchKeyword = !q || o.id.toLowerCase().includes(q);
-    const matchSource = !sourceFilter || o.source === sourceFilter;
-    return matchKeyword && matchSource;
-  });
-
-  if (filtered.length === 0) {
-    list.innerHTML = '';
-    empty.classList.add('show');
-    document.getElementById('countText').textContent = '共 0 笔';
-    document.getElementById('totalAmount').textContent = '¥0.00';
-    return;
-  }
-
-  empty.classList.remove('show');
-  const total = filtered.reduce((s, o) => s + o.amount, 0);
-  document.getElementById('countText').textContent = `共 ${filtered.length} 笔`;
-  document.getElementById('totalAmount').textContent = formatAmount(total);
-
-  list.innerHTML = filtered.map(o => `
-    <div class="order-card">
-      <div class="order-header" onclick="toggleCard(this)">
-        <div class="order-info">
-          <div class="order-no">${o.id}</div>
-          <div class="order-meta">
-            <span class="order-tag ${getTagClass(o.source)}">${getTagText(o.source)}</span>
-          </div>
+<body class="bg-gray-50 text-gray-500 font-sans">
+    <!-- 头部 -->
+    <header class="bg-white sticky top-0 z-10">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-arrow-left text-gray-400 text-lg"></i>
+                <h1 class="text-lg font-medium">账单确认</h1>
+            </div>
+            <div class="text-gray-400">
+                <i class="fa fa-question-circle text-lg"></i>
+            </div>
         </div>
-        <div class="order-right">
-          <span class="order-amount">${formatAmount(o.amount)}</span>
-          <svg class="order-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+
+        <!-- Tab栏 -->
+        <div class="flex border-b border-gray-100">
+            <div class="flex-1 py-3 text-center text-gray-400 text-base">
+                待处理
+            </div>
+            <div class="flex-1 py-3 text-center text-gray-400 text-base">
+                已处理
+            </div>
+            <div class="flex-1 py-3 text-center tab-active text-base">
+                已支付
+            </div>
         </div>
-      </div>
-      <div class="order-detail">
-        <div class="detail-body">
-          <div class="detail-divider"></div>
-          <div class="detail-row">
-            <span class="detail-label">业务方</span>
-            <span class="detail-value">${o.source}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">收款方</span>
-            <span class="detail-value">${o.payee}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">下单时间</span>
-            <span class="detail-value">${o.orderTime}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">支付时间</span>
-            <span class="detail-value">${o.payTime}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">支付金额</span>
-            <span class="detail-value">${formatAmount(o.amount)}</span>
-          </div>
+    </header>
+
+    <!-- 已支付列表页 -->
+    <div id="paid-list" class="p-4 pb-20">
+        <!-- 统计卡片 -->
+        <div class="bg-white rounded-xl p-4 mb-4 card-shadow">
+            <div class="flex justify-between items-center mb-3">
+                <div class="text-gray-400 text-sm">累计已支付金额</div>
+                <div class="text-primary text-sm font-medium">全部 <i class="fa fa-angle-down ml-1"></i></div>
+            </div>
+            <div class="text-3xl font-semibold text-gray-500">¥200,440.94</div>
+            <div class="flex justify-between mt-3 pt-3 border-t border-gray-100">
+                <div>
+                    <div class="text-gray-400 text-xs mb-1">已支付订单数</div>
+                    <div class="text-gray-500 font-medium">156 笔</div>
+                </div>
+                <div>
+                    <div class="text-gray-400 text-xs mb-1">本月已支付</div>
+                    <div class="text-gray-500 font-medium">¥32,560.80</div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- 筛选栏 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex space-x-2">
+                <button class="bg-white px-3 py-1.5 rounded-full text-xs text-gray-400 border border-gray-100 flex items-center">
+                    当天 <i class="fa fa-angle-down ml-1"></i>
+                </button>
+                <button class="bg-white px-3 py-1.5 rounded-full text-xs text-gray-400 border border-gray-100 flex items-center">
+                    全部业务方 <i class="fa fa-angle-down ml-1"></i>
+                </button>
+            </div>
+            <button class="bg-white px-3 py-1.5 rounded-full text-xs text-gray-400 border border-gray-100">
+                <i class="fa fa-search mr-1"></i> 搜索
+            </button>
+        </div>
+
+        <!-- 订单列表 -->
+        <div class="space-y-3">
+            <!-- 订单项1 -->
+            <div class="bg-white rounded-xl p-4 card-shadow cursor-pointer" onclick="showDetail()">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-blue-50 text-primary text-xs px-2 py-0.5 rounded mr-2">订货</span>
+                        <h3 class="font-medium">2026年3月手续费账单</h3>
+                    </div>
+                    <div class="text-success font-medium">¥12,560.00</div>
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-400">
+                    <div>订单号：FD20260325001234</div>
+                    <div>2026-03-28 14:35:20</div>
+                </div>
+            </div>
+
+            <!-- 订单项2 -->
+            <div class="bg-white rounded-xl p-4 card-shadow cursor-pointer" onclick="showDetail()">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-purple-50 text-purple-600 text-xs px-2 py-0.5 rounded mr-2">后台导入</span>
+                        <h3 class="font-medium">2026年2月手续费账单</h3>
+                    </div>
+                    <div class="text-success font-medium">¥15,890.50</div>
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-400">
+                    <div>订单号：FD20260228000987</div>
+                    <div>2026-03-05 10:20:15</div>
+                </div>
+            </div>
+
+            <!-- 订单项3 -->
+            <div class="bg-white rounded-xl p-4 card-shadow cursor-pointer" onclick="showDetail()">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-blue-50 text-primary text-xs px-2 py-0.5 rounded mr-2">订货</span>
+                        <h3 class="font-medium">2026年1月手续费账单</h3>
+                    </div>
+                    <div class="text-success font-medium">¥11,234.80</div>
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-400">
+                    <div>订单号：FD20260131001567</div>
+                    <div>2026-02-06 16:45:30</div>
+                </div>
+            </div>
+
+            <!-- 订单项4 -->
+            <div class="bg-white rounded-xl p-4 card-shadow cursor-pointer" onclick="showDetail()">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-blue-50 text-primary text-xs px-2 py-0.5 rounded mr-2">订货</span>
+                        <h3 class="font-medium">2025年12月手续费账单</h3>
+                    </div>
+                    <div class="text-success font-medium">¥9,876.40</div>
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-400">
+                    <div>订单号：FD20251231002345</div>
+                    <div>2026-01-08 09:15:42</div>
+                </div>
+            </div>
+
+            <!-- 订单项5 -->
+            <div class="bg-white rounded-xl p-4 card-shadow cursor-pointer" onclick="showDetail()">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center">
+                        <span class="bg-purple-50 text-purple-600 text-xs px-2 py-0.5 rounded mr-2">后台导入</span>
+                        <h3 class="font-medium">2025年11月手续费账单</h3>
+                    </div>
+                    <div class="text-success font-medium">¥10,567.90</div>
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-400">
+                    <div>订单号：FD20251130001890</div>
+                    <div>2025-12-07 15:30:18</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载更多 -->
+        <div class="text-center py-4 text-gray-300 text-sm">
+            <i class="fa fa-spinner fa-spin mr-1"></i> 加载更多
+        </div>
     </div>
-  `).join('');
-}
 
-// Search
-const searchInput = document.getElementById('searchInput');
-const searchClear = document.getElementById('searchClear');
+    <!-- 已支付详情页（默认隐藏） -->
+    <div id="paid-detail" class="fixed inset-0 bg-white z-20 transform translate-x-full transition-transform duration-300">
+        <!-- 头部 -->
+        <div class="bg-white sticky top-0 z-10 border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center space-x-2" onclick="hideDetail()">
+                    <i class="fa fa-arrow-left text-gray-400 text-lg"></i>
+                    <h1 class="text-lg font-medium">订单详情</h1>
+                </div>
+                <div class="text-primary text-sm">
+                    <i class="fa fa-download mr-1"></i> 下载凭证
+                </div>
+            </div>
+        </div>
 
-searchInput.addEventListener('input', e => {
-  const val = e.target.value;
-  searchClear.classList.toggle('show', val.length > 0);
-  applyFilter();
-});
+        <!-- 支付状态卡片 -->
+        <div class="bg-gradient-to-r from-primary/90 to-primary p-6 text-white">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
+                    <i class="fa fa-check-circle text-3xl"></i>
+                </div>
+                <div class="text-xl font-medium mb-1">支付成功</div>
+                <div class="text-white/80 text-sm">2026-03-28 14:35:20</div>
+                <div class="text-3xl font-semibold mt-4">¥12,560.00</div>
+            </div>
+        </div>
 
-function clearSearch() {
-  searchInput.value = '';
-  searchClear.classList.remove('show');
-  applyFilter();
-  searchInput.focus();
-}
+        <!-- 订单信息 -->
+        <div class="p-4">
+            <div class="bg-white rounded-xl p-4 card-shadow mb-4">
+                <h2 class="text-base font-medium mb-4">基础信息</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">订单编号</div>
+                        <div class="text-gray-500">FD20260325001234</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">业务类型</div>
+                        <div class="text-gray-500">订货</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">下单时间</div>
+                        <div class="text-gray-500">2026-03-25 10:20:35</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">支付时间</div>
+                        <div class="text-gray-500">2026-03-28 14:35:20</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">支付方式</div>
+                        <div class="text-gray-500">钱包余额</div>
+                    </div>
+                </div>
+            </div>
 
-// Tab switching
-function switchTab(el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-}
+            <div class="bg-white rounded-xl p-4 card-shadow mb-4">
+                <h2 class="text-base font-medium mb-4">交易信息</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">业务方</div>
+                        <div class="text-gray-500">XX食品供应商</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">收款方</div>
+                        <div class="text-gray-500">XXX公司</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">支付金额</div>
+                        <div class="text-gray-500">¥12,560.00</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">其中手续费</div>
+                        <div class="text-gray-500">¥125.60</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-gray-400">交易流水号</div>
+                        <div class="text-gray-500">20260328143520123456789</div>
+                    </div>
+                </div>
+            </div>
 
-// Init
-applyFilter();
-</script>
+            <div class="bg-white rounded-xl p-4 card-shadow">
+                <h2 class="text-base font-medium mb-4">备注</h2>
+                <p class="text-sm text-gray-400">2026年3月周期交易手续费，结算周期：2026-03-01至2026-03-31</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDetail() {
+            document.getElementById('paid-detail').classList.remove('translate-x-full');
+        }
+
+        function hideDetail() {
+            document.getElementById('paid-detail').classList.add('translate-x-full');
+        }
+    </script>
 </body>
 </html>
